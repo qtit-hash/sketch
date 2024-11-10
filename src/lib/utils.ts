@@ -156,6 +156,7 @@ function parsePathToPoints(path: string): number[][] {
 
 export enum ModeEnum {
   DRAW = "draw",
+  DOWNLOAD = "download",
   ERASE = "erase",
   CURSOR = "cursor",
   LINE = "line",
@@ -168,6 +169,7 @@ export enum ModeEnum {
 
 export type Mode =
   | ModeEnum.DRAW
+  | ModeEnum.DOWNLOAD
   | ModeEnum.ERASE
   | ModeEnum.CURSOR
   | ModeEnum.LINE

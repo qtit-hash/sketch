@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Point, ModeEnum, options } from "@/lib/utils";
 import { useStrokesStore } from "@/store/strokesStore";
 import { getStroke } from "perfect-freehand";
@@ -10,8 +10,6 @@ export const useCanvas = () => {
   const [isPanning, setIsPanning] = useState(false);
   const [startPan, setStartPan] = useState({ x: 0, y: 0 });
   const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(null);
-  const [currentBoundingBox, setCurrentBoundingBox] = useState<BoundingBox | null>(null);
-  
   // A4 dimensions at 300 DPI
   const canvas_width = 2480;  // 210mm * 300/25.4
   const canvas_height = 3508; // 297mm * 300/25.4
@@ -29,6 +27,8 @@ export const useCanvas = () => {
     updatePanOffset,
     updateScale,
     canvasRef,
+    boundingBox,         // Global bounding box state
+    setBoundingBox,  
   } = useStrokesStore((state) => state);
 
   useEffect(() => {
@@ -90,7 +90,10 @@ export const useCanvas = () => {
         setPoints((prev) => {
           const newPoints = [...prev, { x, y, pressure: e.pressure }];
           if (mode === ModeEnum.DRAW) {
-            setCurrentBoundingBox(calculateBoundingBox(newPoints));
+          console.log(boundingBox)
+
+           setBoundingBox(calculateBoundingBox(newPoints));
+           
           }
           return newPoints;
         });
@@ -125,7 +128,6 @@ export const useCanvas = () => {
       }
     }
     setPoints([]);
-    setCurrentBoundingBox(null);
   }, [mode, points, strokeColor, addStroke, eraseStroke]);
 
 
@@ -141,10 +143,12 @@ export const useCanvas = () => {
       const mouseY = e.clientY - rect.top;
 
       if (e.ctrlKey) {
-        const delta = e.deltaY * -0.01;
-        const minScale = 0.25;  // Allow more zoom out
-        const maxScale = 4.0;   // Allow more zoom in
-        const newScale = Math.min(Math.max(scale + delta, minScale), maxScale);
+        const zoomIn = e.deltaY < 0; // Zoom in when scrolling up
+
+        const zoomFactor = 0.05;
+        const minScale = 0.5;
+        const maxScale = 2.0;// Allow more zoom in
+        const newScale = Math.min(Math.max(scale + (zoomIn ? zoomFactor : -zoomFactor), minScale), maxScale);
         const scaleFactor = newScale / scale;
 
         const newPanX = mouseX - (mouseX - panOffset.x) * scaleFactor;
@@ -306,9 +310,9 @@ export const useCanvas = () => {
     const canvas = canvasRef.current;
     if (canvas) {
       canvas.addEventListener("wheel", handleWheel, { passive: false });
-      canvas.addEventListener("touchstart", handleTouchStart);
+      canvas.addEventListener("touchstart", handleTouchStart, { passive: false });
       canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
-      canvas.addEventListener("touchend", handleTouchEnd);
+      canvas.addEventListener("touchend", handleTouchEnd, { passive: false });
     }
     return () => {
       if (canvas) {
@@ -340,6 +344,6 @@ export const useCanvas = () => {
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,
-    currentBoundingBox,
+    boundingBox,
   };
 };

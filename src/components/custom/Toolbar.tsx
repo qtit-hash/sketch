@@ -1,24 +1,24 @@
 import React, { useCallback, useEffect } from "react";
 import { useStrokesStore } from "@/store/strokesStore";
-import { Mode, ModeEnum } from "@/lib/utils";
+import { cn, Mode, ModeEnum } from "@/lib/utils";
 import {
   Pencil,
   Type,
   Eraser,
   Move,
   MousePointer,
-  Download,
+  Download,  // Import icon Download
   LucideIcon,
   Hand,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useCanvas } from "@/hooks/useCanvas";
 
 interface ModeConfig {
   mode: Mode;
@@ -72,38 +72,98 @@ const modeConfigs: ModeConfig[] = [
     label: "Select",
     shortcut: "6",
   },
-  
+  // Thêm chế độ Download vào modeConfigs
+  {
+    mode: ModeEnum.DOWNLOAD,
+    icon: Download,  // Dùng icon Download
+    cursorStyle: "default",
+    label: "Download",
+    shortcut: "D",  // Dùng phím tắt D
+  }
 ];
 
 const ModeButton: React.FC<{
   config: ModeConfig;
   isActive: boolean;
   onClick: () => void;
-}> = ({ config, isActive, onClick }) => (
-  <TooltipProvider>
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          variant={isActive ? "default" : "ghost"}
-          onClick={onClick}
-          className="rounded-lg shadow-none h-8 w-8 p-2 flex items-center justify-center"
-        >
-          <config.icon className="w-4 h-4 bg-inherit stroke-1" />
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>
-        <p>
-          {config.label} (Press {config.shortcut})
-        </p>
-      </TooltipContent>
-    </Tooltip>
-  </TooltipProvider>
-);
+}> = ({ config, isActive, onClick }) => {
+  //canvasref = HTMLCanvasElement
+//   // bounding boxes = export interface BoundingBox {
+//   x: number;
+//   y: number;
+//   width: number;
+//   height: number;
+// }
+  const { boundingBox, canvasRef , clearCanvas } = useStrokesStore()
+  const downloadRegion = () => {
+    // Kiểm tra cả canvasRef.current
+    if (!canvasRef?.current || !boundingBox) return;
+  
+    // Tạo canvas tạm thời để chứa vùng cần tải
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d');
+    
+    if (!tempCtx) return;
+  
+    // Đặt kích thước cho canvas tạm thời bằng với vùng boundingBox
+    tempCanvas.width = boundingBox.width;
+    tempCanvas.height = boundingBox.height;
+  
+    // Copy vùng được chọn từ canvas gốc sang canvas tạm thời
+    // Sử dụng canvasRef.current thay vì canvasRef
+    tempCtx.drawImage(
+      canvasRef.current,
+      boundingBox.x,
+      boundingBox.y,
+      boundingBox.width,
+      boundingBox.height,
+      0,
+      0,
+      boundingBox.width,
+      boundingBox.height
+    );
+  
+    // Tạo link tải ảnh
+    const link = document.createElement('a');
+    link.download = 'canvas-region.png'; // Tên file khi tải về
+    
+    // Chuyển canvas thành URL
+    tempCanvas.toBlob((blob) => {
+      if (blob) {
+        const url = URL.createObjectURL(blob);
+        link.href = url;
+        link.click();
+        
+        // Giải phóng URL sau khi tải xong
+        URL.revokeObjectURL(url);
+      }
+    }, 'image/png');
+  };
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant={isActive ? "default" : "ghost"}
+            onClick={config.mode === ModeEnum.DOWNLOAD ? downloadRegion : onClick}
+            size={"icon"}
+            className="shadow-none h-8 w-8 rounded p-2 flex items-center justify-center"
+          >
+            <config.icon className="w-4 h-4 bg-inherit" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>
+            {config.label} (Press {config.shortcut})
+          </p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+};
 
 const Toolbar: React.FC = () => {
-  const { updateMode, mode, updateCursorStyle, downloadImage } =
-    useStrokesStore();
-  const { toast } = useToast();
+  const { updateMode, mode, updateCursorStyle } = useStrokesStore();
 
   const handleModeChange = useCallback(
     (newMode: Mode) => {
@@ -119,16 +179,6 @@ const Toolbar: React.FC = () => {
     [updateMode, updateCursorStyle]
   );
 
-  const handleDownload = () => {
-    downloadImage((message: string) =>
-      toast({
-        variant: "destructive",
-        title: message,
-        duration: 1000,
-      })
-    );
-  };
-
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       const config = modeConfigs.find((c) => c.shortcut === event.key);
@@ -142,7 +192,7 @@ const Toolbar: React.FC = () => {
   }, [handleModeChange]);
 
   return (
-    <nav className="flex items-center shadow-lg border md:rounded-xl mt-2 gap- p-1 z-10">
+    <nav className="flex items-center border md:rounded-xl flex items-center p-1 shadow-sm border z-5 mt-3">
       <ul className="flex items-center gap-2 rounded-lg p-1 max-w-full flex-wrap">
         {modeConfigs.map((config) => (
           <li key={config.mode} className="relative">
@@ -153,11 +203,6 @@ const Toolbar: React.FC = () => {
             />
           </li>
         ))}
-        <li>
-          <Button variant="ghost" onClick={handleDownload} className="rounded-lg shadow-none h-8 w-8 p-2 flex items-center justify-center">
-            <Download className="w-4 h-4 bg-inherit stroke-1" />
-          </Button>
-        </li>
       </ul>
     </nav>
   );
