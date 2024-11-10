@@ -11,6 +11,15 @@ import { useStrokesStore } from "@/store/strokesStore"
 import { ModeEnum } from "@/lib/utils"
 import HomePage from './HomePage'
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { ChevronDown, MenuIcon, Plus, Redo2, Settings2, Undo2, X } from 'lucide-react'
+import React from 'react'
+interface MathEquation {
+  id: number
+  equation: string
+  type: 'linear' | 'quadratic'
+}
+import { cn } from "@/lib/utils"
+import CustomSidebar from '@/components/custom/CustomSidebar'
 
 const SketchView = () => {
   const { mode, strokes } = useStrokesStore()
@@ -18,69 +27,48 @@ const SketchView = () => {
   const [activePage, setActivePage] = useState(1)
   const navigate = useNavigate()
 
-  const addPage = () => {
-    const newPage = { id: pages.length + 1, name: `Page ${pages.length + 1}` }
-    setPages([...pages, newPage])
-    setActivePage(newPage.id)
+  const [equations, setEquations] = React.useState<MathEquation[]>([
+    { id: 1, equation: '2x + y = 0', type: 'linear' },
+    { id: 2, equation: '2x²', type: 'quadratic' },
+  ])
+  
+  const [selectedId, setSelectedId] = React.useState(3)
+
+  const handleRemove = (id: number) => {
+    setEquations(equations.filter(eq => eq.id !== id))
   }
 
   return (
-    
-    <SidebarProvider>
-      <div className="flex h-[100vh] overflow-hidden font-sans">
-        <Sidebar>
-          <SidebarHeader>
-            <h2 className="px-4 py-2 text-lg font-semibold">Sidebar demo</h2>
-          </SidebarHeader>
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel>Pages</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {pages.map((page) => (
-                    <SidebarMenuItem key={page.id}>
-                      <SidebarMenuButton
-                        onClick={() => setActivePage(page.id)}
-                        isActive={activePage === page.id}
-                      >
-                        {page.name}
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
-          <div className="p-4 space-y-2">
-            <Button onClick={addPage} className="w-full">Add Page</Button>
-            <Button onClick={() => navigate('/')} className="w-full">Back to Homepage</Button>
-          </div>
-        </Sidebar>
-        
-        <div className="flex-1 relative">
-          <div className="h-[100%] relative">
-            <SketchCanvas key={activePage} />
-            {mode === ModeEnum.CURSOR && strokes.length === 0 && (
-              <div className="h-[100%] flex items-center absolute top-0 left-0 w-full">
-                <Info />
-              </div>
-            )}
-          </div>
-          
-          <div className="absolute z-10 ">
-            <SidebarTrigger></SidebarTrigger>
-          </div>
-          <div className="absolute flex justify-center w-full top-0">
-            <Toolbar />
-          </div>
-          <div className="absolute flex justify-between w-full bottom-0">
-          <Footer />
-          </div>
 
+    <div className="flex h-[100vh] overflow-hidden font-sans">
+          <SidebarProvider>
+
+      <CustomSidebar 
+        equations={equations}
+        selectedId={selectedId}
+        setSelectedId={setSelectedId}
+        handleRemove={handleRemove}
+      />
+      <div className="flex-1 relative">
+        <div className="h-[100%] relative">
+          <SketchCanvas key={activePage} />
+          {mode === ModeEnum.CURSOR && strokes.length === 0 && (
+            <div className="h-[100%] flex items-center absolute top-0 left-0 w-full">
+              <Info />
+            </div>
+          )}
+        </div>
+
+        <div className="absolute flex justify-center w-full top-0">
+          <Toolbar />
+        </div>
+        <div className="absolute flex justify-between w-full bottom-0">
+          <Footer />
         </div>
       </div>
-    </SidebarProvider>
-    
+      </SidebarProvider>
+
+    </div>
   )
 }
 

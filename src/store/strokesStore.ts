@@ -7,7 +7,8 @@ import {
   doesIntersect,
   eraseTextStrokes,
 } from "@/lib/utils";
-
+import { useCanvas } from "@/hooks/useCanvas";
+import { BoundingBox } from "@/hooks/selectionBox";
 interface StrokesState {
   mode: Mode;
   strokes: Stroke[];
@@ -32,9 +33,10 @@ interface StrokesState {
   updatePanOffset: (newOffset: { x: number; y: number }) => void;
   updateScale: (newScale: number) => void;
   clearCanvas: () => void;
-  downloadImage: (toast: (message: string) => void) => void;
   updateStrokeTaper: (strokeTaper: number) => void;
   updateStroke: (updatedStroke: Stroke) => void;
+  boundingBox: (BoundingBox | null);
+  setBoundingBox: (box: BoundingBox | null) => void;
 }
 
 export const useStrokesStore = create<StrokesState>((set, get) => ({
@@ -48,6 +50,9 @@ export const useStrokesStore = create<StrokesState>((set, get) => ({
   scale: 1,
   panOffset: { x: 0, y: 0 },
   canvasRef: { current: null },
+  boundingBox: null, // Store current bounding box here
+
+  setBoundingBox: (box) => set(() => ({ boundingBox: box })),
 
   updateCursorStyle: (cursorStyle: string) => set({ cursorStyle }),
   updateMode: (mode: Mode) => set({ mode }),
@@ -88,7 +93,7 @@ export const useStrokesStore = create<StrokesState>((set, get) => ({
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
-    const zoomFactor = 0.1;
+    const zoomFactor = 0.05;
     const minScale = 0.5;
     const maxScale = 2.0;
     const newScale = Math.min(Math.max(scale + (zoomIn ? zoomFactor : -zoomFactor), minScale), maxScale);
@@ -107,35 +112,7 @@ export const useStrokesStore = create<StrokesState>((set, get) => ({
     set({ panOffset: newPanOffset, scale: newScale });
   },
   clearCanvas: () => set({ strokes: [], undoneStrokes: [] }),
-  downloadImage: (toast: (message: string) => void) => {
-    const { strokes, canvasRef } = get();
-    if (strokes.length === 0) {
-      toast("Canvas is empty!");
-      return;
-    }
-    const canvas = canvasRef.current;
-    if (!canvas) return;
 
-    const context = canvas.getContext("2d");
-    if (!context) return;
-
-    const currentContent = context.getImageData(0, 0, canvas.width, canvas.height);
-
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    context.fillStyle = "white";
-    context.fillRect(0, 0, canvas.width, canvas.height);
-
-    context.putImageData(currentContent, 0, 0);
-
-    const image = canvas.toDataURL("image/png");
-    const downloadLink = document.createElement("a");
-    downloadLink.href = image;
-    downloadLink.download = "canvas_image.png";
-    downloadLink.click();
-
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    context.putImageData(currentContent, 0, 0);
-  },
   updateStroke: (updatedStroke: Stroke) => set((state) => ({
     strokes: state.strokes.map((stroke) =>
       stroke === updatedStroke ? updatedStroke : stroke
