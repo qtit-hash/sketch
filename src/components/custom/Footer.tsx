@@ -16,7 +16,7 @@ const Footer = () => {
   return (
     
     <div className="flex select-none cursor-default z-10">
-      <div className="fixed bottom-3 right-4 rounded-lg shadow-lg z-10 border">
+      <div className="fixed bottom-4 left-4 rounded-lg shadow-lg z-10 border">
         <Button className="h-10 w-10 rounded" title="Zoom Out" variant="ghost" onClick={() => handleZoom(false)}>
           <ZoomOut className="h-2 w-2" />
         </Button>
