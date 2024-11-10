@@ -1,17 +1,10 @@
 import { useStrokesStore } from "@/store/strokesStore";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import StylingPallete from "./StylingPallete";
-import { Undo2, Redo2, Palette, ZoomIn, ZoomOut} from "lucide-react";
+import { ZoomIn, ZoomOut} from "lucide-react";
 import { Button } from "../ui/button";
-import { useState } from "react";
+
 
 const Footer = () => {
-  const { undoStroke, redoStroke, handleZoom, scale } = useStrokesStore();
-  const [isPopoverOpen, setIsPopoverOpen] = useState<boolean>(false);
+  const {handleZoom, scale } = useStrokesStore();
 
   return (
     
