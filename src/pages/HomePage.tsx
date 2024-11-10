@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { FolderOpen, Plus, Clock } from 'lucide-react'
 
 export default function HomePage() {
-  const [recentProjects, setRecentProjects] = useState([
+  const [recentProjects] = useState([
     { id: 1, name: "Sketch 1", lastOpened: "2 ngày trước" },
     { id: 2, name: "Logo Design", lastOpened: "1 tuần trước" },
     { id: 3, name: "Wireframe", lastOpened: "3 tuần trước" },
