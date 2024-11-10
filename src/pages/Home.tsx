@@ -11,7 +11,6 @@ import { useStrokesStore } from "@/store/strokesStore"
 import { ModeEnum } from "@/lib/utils"
 import HomePage from './HomePage'
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { Menu } from 'lucide-react'
 
 const SketchView = () => {
   const { mode, strokes } = useStrokesStore()
@@ -26,6 +25,7 @@ const SketchView = () => {
   }
 
   return (
+    
     <SidebarProvider>
       <div className="flex h-[100vh] overflow-hidden font-sans">
         <Sidebar>
@@ -73,9 +73,14 @@ const SketchView = () => {
           <div className="absolute flex justify-center w-full top-0">
             <Toolbar />
           </div>
+          <div className="absolute flex justify-between w-full bottom-0">
+          <Footer />
+          </div>
+
         </div>
       </div>
     </SidebarProvider>
+    
   )
 }
 

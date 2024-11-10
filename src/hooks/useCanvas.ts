@@ -99,7 +99,7 @@ export const useCanvas = () => {
     [mode, isPanning, startPan, updatePanOffset, getAdjustedCoordinates, isPointInCanvas]
   );
 
-  const handlePointerUp = useCallback(() => {
+  const handlePointerUp = useCallback((_e: React.PointerEvent<HTMLCanvasElement>) => {
     if (mode === ModeEnum.SCROLL) {
       setIsPanning(false);
       return;
@@ -127,6 +127,7 @@ export const useCanvas = () => {
     setPoints([]);
     setCurrentBoundingBox(null);
   }, [mode, points, strokeColor, addStroke, eraseStroke]);
+
 
   const handleWheel = useCallback(
     (e: WheelEvent) => {
